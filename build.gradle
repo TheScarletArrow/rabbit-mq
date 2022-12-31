@@ -3,7 +3,8 @@ plugins {
 	id 'org.springframework.boot' version '3.0.1'
 	id 'io.spring.dependency-management' version '1.1.0'
 	id 'org.jetbrains.kotlin.plugin.spring' version '1.5.10'
-	id 'org.jetbrains.kotlin.jvm' version '1.8.0-RC2'
+	id 'org.jetbrains.kotlin.jvm' version '1.8.0'
+
 }
 
 group = 'ru.scarlet'
@@ -29,6 +30,9 @@ dependencies {
 	testImplementation 'org.springframework.amqp:spring-rabbit-test'
 	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.4.2'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8'
+
+
 }
 
 tasks.named('test') {
@@ -54,12 +58,24 @@ if (env == 'local') {
 	bootRun.dependsOn(StartService)
 }
 compileKotlin {
+
 	kotlinOptions {
-		jvmTarget = "1.8"
+		jvmTarget = "17"
+
 	}
 }
 compileTestKotlin {
 	kotlinOptions {
-		jvmTarget = "1.8"
+		jvmTarget = "17"
+	}
+}
+kotlin {
+	targetCompatibility = JavaVersion.VERSION_17
+	target {
+		compilations.all {
+			kotlinOptions {
+				jvmTarget = "17"
+			}
+		}
 	}
 }
