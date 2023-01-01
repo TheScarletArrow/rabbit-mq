@@ -7,15 +7,17 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import ru.scarlet.rabbit.event.Address
+import ru.scarlet.rabbit.event.CurrentSession
 import ru.scarlet.rabbit.event.Customer
 import ru.scarlet.rabbit.event.Order
 import ru.scarlet.rabbit.event.Product
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 
 const val NEW_CUSTOMER_ROUTING_KEY = "store.customer.created"
 const val NEW_ORDER_ROUTING_KEY = "store.order.created"
+const val NEW_SESSION_ROUTING_KEY = "store.session.created"
 
 @Service
 @Slf4j
@@ -27,31 +29,40 @@ class EventProducer(private val rabbitTemplate: RabbitTemplate) {
             .findAndAddModules()
             .build()
         mapper.registerModule(com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
+        val totalQuantity = (1..10).random()
         return Order(
 
             orderId = UUID.randomUUID(),
             orderName = "Order ##",
-            totalQuantity = (1..10).random(),
-            isSameDayDelivery = (0..1).random() == 1,
+            totalQuantity = totalQuantity,
+            isSameDayDelivery = totalQuantity == 1,
             createdAt = Instant.now().epochSecond,
-            product = listOf(
+            product = if (totalQuantity>5) listOf(
                 Product(
                     name = "Product ##",
-                    quantity = (1..10).random()
+                    quantity = totalQuantity
                 )
-            )
+            ) else listOf()
 
+        )
+    }
+
+    private fun createNewCustomer():Customer{
+        return Customer(
+            customerId = UUID.randomUUID(),
+            customerName = "Customer ##",
+            address = Address(
+                streetName = "Street ##",
+                city = "City ##",
+                isHomeAddress = (0..1).random() == 1
+            ),
+            email = "email"
         )
     }
 
     fun sendNewCustomerDetails() {
         println("Sending new customer details")
-        val customer = Customer(
-            customerId = UUID.randomUUID(),
-            customerName = "John",
-            address = Address("Main Street", "New York", true),
-            email = "abcdef"
-        )
+        val customer = createNewCustomer()
         rabbitTemplate.convertAndSend(NEW_CUSTOMER_ROUTING_KEY, customer)
         println("$customer")
     }
@@ -63,9 +74,21 @@ class EventProducer(private val rabbitTemplate: RabbitTemplate) {
         println("$order")
     }
 
-    @Scheduled(fixedDelay = 1000L)
+    @Scheduled(fixedDelay = 100L)
     fun execute() {
+        sendNewSessionDetails()
         sendNewCustomerDetails()
         sendNewOrderDetails()
+    }
+
+    fun sendNewSessionDetails() {
+        println("Sending new session details")
+        val session = CurrentSession(
+            sessionId = UUID.randomUUID(),
+            sessionName = "Session ##",
+            startedAt = Instant.now().epochSecond,
+            customerId =  createNewCustomer().customerId
+        )
+        rabbitTemplate.convertAndSend(NEW_SESSION_ROUTING_KEY, session)
     }
 }

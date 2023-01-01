@@ -15,7 +15,7 @@ const val EXCHANGE_NAME = "storeExchange"
 const val CUSTOMER_RELATIONS_QUEUE = "customerRelationsDepartment"
 const val ORDER_DISPATCH_QUEUE = "orderDispatchDepartment"
 const val STORE_QUEUE = "allEvents"
-
+const val SESSION_QUEUE = "sessionEvents"
 @Configuration
 class EventProducerConfiguration {
     @Bean
@@ -38,6 +38,10 @@ class EventProducerConfiguration {
         return Queue(STORE_QUEUE, true)
     }
 
+    @Bean(SESSION_QUEUE)
+    fun sessionQueue(): Queue {
+        return Queue(SESSION_QUEUE, true)
+    }
     @Bean
     fun customerRelations(@Qualifier(CUSTOMER_RELATIONS_QUEUE) queue: Queue, eventExchange: TopicExchange): Binding {
         return BindingBuilder
@@ -54,6 +58,13 @@ class EventProducerConfiguration {
                 .with("store.order.#")
     }
 
+    @Bean
+    fun newSession(@Qualifier(SESSION_QUEUE) queue: Queue, eventExchange: TopicExchange): Binding {
+        return BindingBuilder
+                .bind(queue)
+                .to(eventExchange)
+                .with("store.session.#")
+    }
     @Bean
     fun newBinding(@Qualifier(STORE_QUEUE) queue: Queue, eventExchange: TopicExchange): Binding {
         return BindingBuilder
