@@ -6,18 +6,17 @@ import lombok.extern.slf4j.Slf4j
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import ru.scarlet.rabbit.event.Address
-import ru.scarlet.rabbit.event.CurrentSession
-import ru.scarlet.rabbit.event.Customer
-import ru.scarlet.rabbit.event.Order
-import ru.scarlet.rabbit.event.Product
+import ru.scarlet.rabbit.event.*
 import java.time.Instant
+import java.time.LocalDateTime
 import java.util.UUID
 
 
 const val NEW_CUSTOMER_ROUTING_KEY = "store.customer.created"
 const val NEW_ORDER_ROUTING_KEY = "store.order.created"
 const val NEW_SESSION_ROUTING_KEY = "store.session.created"
+const val NEW_POST_ROUTING_KEY = "store.post.created"
+const val NEW_COMMENT_ROUTING_KEY = "store.comment.created"
 
 @Service
 @Slf4j
@@ -79,6 +78,8 @@ class EventProducer(private val rabbitTemplate: RabbitTemplate) {
         sendNewSessionDetails()
         sendNewCustomerDetails()
         sendNewOrderDetails()
+        sendsNewPostDetails()
+        sendNewCommentDetails()
     }
 
     fun sendNewSessionDetails() {
@@ -90,5 +91,33 @@ class EventProducer(private val rabbitTemplate: RabbitTemplate) {
             customerId =  createNewCustomer().customerId
         )
         rabbitTemplate.convertAndSend(NEW_SESSION_ROUTING_KEY, session)
+    }
+
+    fun sendsNewPostDetails() {
+        println("Sending new post details")
+        val post = Post(
+            id = UUID.randomUUID(),
+            title = "Post ##",
+            createdAt = Instant.now().epochSecond,
+            author = "Author ${(2..100).random()}",
+            updatedAt = null,
+            body = "Body ##",
+            content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sed nisl vitae nisl luctus lacinia. Sed auctor, nisl vitae luctus lacinia, nisl nisl aliquam nisl, nec aliquam nisl nisl nec nisl. Sed auctor, nisl vitae luctus lacinia, nisl nisl aliquam nisl, nec aliquam nisl nisl nec nisl. Sed auctor, nisl vitae luctus lacinia, nisl nisl aliquam nisl, nec aliquam nisl nisl nec nisl. Sed auctor, nisl vitae luctus lacinia, nisl nisl aliquam nisl, nec aliquam nisl nisl nec nisl. Sed auctor, nisl vitae luctus lacinia, nisl nisl aliquam nisl, nec aliquam nisl nisl nec nisl. Sed auctor, nisl vitae luctus lacinia, nisl nisl aliquam nisl, nec aliquam nisl nisl nec nisl. Sed auctor, nisl vitae luctus lacinia, nisl nisl aliquam nisl, nec aliquam nisl nisl nec nisl. Sed auctor, nisl vitae luctus lacinia, nisl nisl aliquam nisl, nec aliquam nisl nisl nec nisl. Sed auctor, nisl vitae luctus lacinia, nisl nisl aliquam nisl, nec aliquam nisl nisl nec nisl. Sed auctor, nisl vitae luctus lacinia, nisl nisl aliquam nisl, nec aliquam nisl nisl nec nisl. Sed auctor, nisl vitae luctus lacinia, nisl nisl aliquam nisl, nec aliquam nisl nisl nec nisl. Sed auctor, nisl vitae luctus lacinia, nisl nisl aliquam nisl, nec aliquam nisl nisl nec nisl. Sed auctor, nisl vitae luctus lacinia, nisl nisl aliquam nisl, nec aliquam nisl nisl nec nisl. Sed auctor, nisl vitae luctus lacinia, nisl nisl aliquam nisl, nec aliquam nisl nisl nec nisl. Sed a"
+        )
+        rabbitTemplate.convertAndSend(NEW_POST_ROUTING_KEY, post)
+    }
+
+    fun sendNewCommentDetails(){
+        println("Sending new comment details")
+        val comment = Comment(
+            id = UUID.randomUUID(),
+            postId = UUID.randomUUID(),
+            author = "Author ${(2..100).random()}",
+            createdAt = Instant.now().epochSecond,
+            updatedAt = null,
+            body = "Comment ##",
+            content = "Comment ${LocalDateTime.now()}"
+        )
+        rabbitTemplate.convertAndSend(NEW_COMMENT_ROUTING_KEY, comment)
     }
 }

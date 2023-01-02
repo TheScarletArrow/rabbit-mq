@@ -16,6 +16,8 @@ const val CUSTOMER_RELATIONS_QUEUE = "customerRelationsDepartment"
 const val ORDER_DISPATCH_QUEUE = "orderDispatchDepartment"
 const val STORE_QUEUE = "allEvents"
 const val SESSION_QUEUE = "sessionEvents"
+const val POST_QUEUE = "postEvents"
+const val COMMENT_QUEUE = "commentEvents"
 @Configuration
 class EventProducerConfiguration {
     @Bean
@@ -42,6 +44,16 @@ class EventProducerConfiguration {
     fun sessionQueue(): Queue {
         return Queue(SESSION_QUEUE, true)
     }
+
+    @Bean(POST_QUEUE)
+    fun postQueue(): Queue {
+        return Queue(POST_QUEUE, true)
+    }
+
+    @Bean(COMMENT_QUEUE)
+    fun commentQueue(): Queue {
+        return Queue(COMMENT_QUEUE, true)
+    }
     @Bean
     fun customerRelations(@Qualifier(CUSTOMER_RELATIONS_QUEUE) queue: Queue, eventExchange: TopicExchange): Binding {
         return BindingBuilder
@@ -65,6 +77,24 @@ class EventProducerConfiguration {
                 .to(eventExchange)
                 .with("store.session.#")
     }
+
+    @Bean
+    fun newPost(@Qualifier(POST_QUEUE) queue: Queue, eventExchange: TopicExchange): Binding {
+        return BindingBuilder
+                .bind(queue)
+                .to(eventExchange)
+                .with("store.post.#")
+    }
+
+    @Bean
+    fun newComment(@Qualifier(COMMENT_QUEUE) queue: Queue, eventExchange: TopicExchange): Binding {
+        return BindingBuilder
+                .bind(queue)
+                .to(eventExchange)
+                .with("store.comment.#")
+    }
+
+
     @Bean
     fun newBinding(@Qualifier(STORE_QUEUE) queue: Queue, eventExchange: TopicExchange): Binding {
         return BindingBuilder
